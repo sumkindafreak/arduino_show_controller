@@ -1,7 +1,6 @@
 #include "SerialMP3Player.h"
 #include <Adafruit_NeoPixel.h>
 
-
 #define TX 11
 #define RX 10
 
@@ -11,9 +10,6 @@
 SerialMP3Player mp3(RX, TX);
 SerialMP3Player mp3_2 (RE, TE);
 
-#define steam_on 5000
-
-unsigned long time_1 = 0;
 
 // Which pin on the Arduino is connected to the Neomachine?
 #define PIN   2
@@ -41,10 +37,11 @@ bool doorisopen = false;
 bool doorisclosed = false;
 bool emergency = false;
 bool machine_on = false;
+bool machine_running = false;
+bool steam_on = false;
 
 unsigned long previousMillis = 0;
-
-
+const long time1 = 8000;
 
 
 void console_flickr() {
@@ -86,6 +83,7 @@ void loop() {
     Serial.println("EMERGENCY CONDITIONS");
     mp3.stop();
     emergency = true;
+    machine_running = false;
     for (int i = 0; i < 10; i++) {
       machine.setPixelColor(i, 255, 255, 255); // Set the pixel color
       machine.show(); // Update the NeoPixel strip
@@ -101,9 +99,7 @@ void loop() {
     machine.setPixelColor(0, 255, 150, 0); // Set the pixel color
     machine.show();
     Serial.println("machine reset");
-
-
-
+    machine_running = false;
   }
 
   buttonState = digitalRead(dooropen);
@@ -137,7 +133,6 @@ void loop() {
     machine.setPixelColor(3, 0, 255, 0); // Set the pixel color
     machine.setPixelColor(4, 0, 255, 0); // Set the pixel color
 
-
   }
 
   if (doorisclosed) {
@@ -154,35 +149,32 @@ void loop() {
   if (digitalRead(startbutton) == LOW) {
     mp3.play(1);
     machine_on = true;
+    machine_running = false;
     Serial.println("machine booting up");
     machine.setPixelColor(1, 0, 255, 0); // Set the pixel color
     machine.setPixelColor(2, 0, 255, 0); // Set the pixel color
     machine.setPixelColor(3, 0, 255, 0); // Set the pixel color
     machine.setPixelColor(4, 0, 255, 0); // Set the pixel color
-  
+
 
 
   }
-  else {
-    machine_on = false;
-  }
+//  else {
+//    machine_on = false;
+ // }
 
   if ((digitalRead(scene1) == LOW) && (doorisclosed)) {
-    unsigned long currentMillis = millis();
+    machine_running = true;
     Serial.println("scene 1");
     mp3.play(2);
-delay (7000);
-machine.setPixelColor(5, 255, 255, 255); // Set the pixel color
-  delay (3000);
-machine.setPixelColor(5, 0, 0, 0); // Set the pixel color
-  delay (7000);
-  machine.setPixelColor(1, 0,0, 0); // Set the pixel color
-    machine.setPixelColor(2, 0, 0, 0); // Set the pixel color
-    machine.setPixelColor(3, 0, 0, 0); // Set the pixel color
-    machine.setPixelColor(4, 0, 0, 0); // Set the pixel color
-  
-    }
 
-    machine.show();
+    if (currentMillis - previousMillis >= time1) {
+      previousMillis = currentMillis;
+      Serial.println("steam on");
+      machine.setPixelColor(5, 255, 255, 255); // Set the pixel color
+    }
   }
+
+
+
 }
