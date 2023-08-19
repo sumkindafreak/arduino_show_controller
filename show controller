@@ -329,10 +329,8 @@ void loop() {
   }
   else
     time_flicker = false;
-
-
-
-  if (digitalRead(emergency_stop) == LOW) {
+ 
+ if (digitalRead(emergency_stop) == LOW) {
     Serial.println("EMERGENCY CONDITIONS");
     mp3.stop();
     previousMillis = currentMillis;
@@ -465,47 +463,25 @@ void loop() {
   // ill remain in contact with you using a radio
 
 
-  if (state == 4 && currentMillis - previousMillis >= 9000) {
- if (console) {
-    console_flikr();
-  }
-    time_flicker = true;
-    console = true;
+  if (state == 4 && currentMillis - previousMillis >= 10000) {
+
+   
     machine.setPixelColor(9, 0, 0, 0); // Set the pixel color
     machine.setPixelColor(10, 0, 0, 0); // Set the pixel color
-    machine.setPixelColor(11, 20, 20, 20); // Set the pixel color
-    machine.setPixelColor(12, 20, 20, 20); // Set the pixel color
-    machine.setPixelColor(13, 20, 20, 20); // Set the pixel color
-    machine.setPixelColor(14, 20, 20, 20); // Set the pixel color
     Serial.println("blast shield off");
     Serial.println("travelling into dino scene");
-
-    state = 5;
-  }
-
-  if (state == 5 && currentMillis - previousMillis >= 50000) {
-    console = false;
-    time_flicker = false;
-    machine.setPixelColor(11, 20, 20, 20); // Set the pixel color
-    machine.setPixelColor(12, 20, 20, 20); // Set the pixel color
-    machine.setPixelColor(13, 20, 20, 20); // Set the pixel color
-    machine.setPixelColor(14, 20, 20, 20); // Set the pixel color
-    time_display.clear();
-    Serial.println("dino scene");
-    machine.setPixelColor(5, 0, 255, 0); // Set the pixel color
-    machine.setPixelColor(9, 0, 255, 0); // Set the pixel color
-    machine.setPixelColor(10, 0, 255, 0); // Set the pixel color
-    zero();
-    for (int i = 15; i < 20; i++) {
-      machine.setPixelColor(i, 255, 255, 0); // Set the pixel color
-      machine.show(); // Update the NeoPixel strip
-    }
-
     previousMillis = currentMillis;
-
-    state = 6;
-
+    state = 5;
+     time_flicker = true;
   }
+
+  if (state == 5 && currentMillis - previousMillis >= 20000) {
+    Serial.println("dino scene");
+    previousMillis = currentMillis;
+    state = 6;
+  }
+
+  
   if (state == 6 && currentMillis - previousMillis >= 20000) {
     machine.setPixelColor(5, 0, 0, 0); // Set the pixel color
     machine.setPixelColor(9, 0, 0, 0); // Set the pixel color
