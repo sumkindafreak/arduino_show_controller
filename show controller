@@ -48,27 +48,80 @@ bool buttonState = false;
 bool lastButtonState = false;
 int buttonPressCount = 0;
 
+unsigned long machine_started_time = 0;
+unsigned long task2_time = 0;
+unsigned long task3_time = 0;
+unsigned long task4_time = 0;
+unsigned long task5_time = 0;
+unsigned long task6_time = 0;
+unsigned long task7_time = 0;
+unsigned long task8_time = 0;
+unsigned long task9_time = 0;
+unsigned long task10_time = 0;
+unsigned long task11_time = 0;
+unsigned long task12_time = 0;
+unsigned long task13_time = 0;
+unsigned long task14_time = 0;
+unsigned long JACK_time = 0;
+unsigned long STAB1_time = 0;
+unsigned long POWERUP_time = 0;
+unsigned long FINAL_time = 0;
+unsigned long HOME_time = 0;
+
+bool play1 = false;
+bool play2 = false;
+bool bombs = false;
+bool shock = false;
+bool machine_started_running = false;
+bool task2_running = false;
+bool loop1_running = false;
+bool loop2_running = false;
+bool loop3_running = false;
+bool task3_running = false;
+bool task4_running = false;
+bool task5_running = false;
+bool task6_running = false;
+bool task7_running = false;
+bool task8_running = false;
+bool task9_running = false;
+bool task10_running = false;
+bool task11_running = false;
+bool task12_running = false;
+bool task13_running = false;
+bool task14_running = false;
+bool JACK_running = false;
+bool STAB1_running = false;
+bool POWERUP_running = false;
+bool FINAL_running = false;
+bool HOME_running = false;
 bool doorisopen = false;
 bool doorisclosed = false;
-bool emergency = false;
-bool machine_on = false;
-bool console = false;
-bool scene_1 = false;
-bool shock = false;
-bool bombs = false;
-bool time_flicker = false;
-bool console_fading = false;
 
 
 unsigned long previousMillis = 0;
 int twinkle = 150;
 int fliker = 25;
 int timefliker = 20;
-int electric = 150;
-int state = 0;
-const long fade_time = 5000;
+int electric = 70;
+const long fade_time = 10000;
+int interval = 150;
 
 
+bool emergency = false;
+bool machine_on = false;
+bool console = false;
+
+bool time_flicker = false;
+bool console_fading = false;
+
+
+void task_1() {                                                    // machine booting up
+  Serial.println("machine now running");
+  machine.setPixelColor(11, machine.Color(random(256), random(256), random(256)));
+  machine.setPixelColor(12, machine.Color(random(256), random(256), random(256)));
+  machine.setPixelColor(13, machine.Color(random(256), random(256), random(256)));
+  machine.setPixelColor(14, machine.Color(random(256), random(256), random(256)));
+}
 void console_flikr() {
   unsigned long currentMillis = millis();
 
@@ -166,6 +219,55 @@ void twentyfour() {
 
 }
 
+
+void five_ten() {
+
+  time_display.setPixelColor(0, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(1, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(2, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(3, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(4, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(5, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(6, 255, 0, 0); // Set the pixel color
+
+  /*------------------------------------------------------------*/
+
+
+  time_display.setPixelColor(7, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(8, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(9, 255, 0, 0); // Set the pixel color
+  //  time_display.setPixelColor(10, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(11, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(12, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(13, 255, 0, 0); // Set the pixel color
+
+  /*------------------------------------------------------------*/
+
+
+  time_display.setPixelColor(14, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(15, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(16, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(17, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(18, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(19, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(20, 255, 0, 0); // Set the pixel color
+
+  /*------------------------------------------------------------*/
+
+
+  //time_display.setPixelColor(21, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(22, 255, 0, 0);
+  time_display.setPixelColor(23, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(24, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(25, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(26, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(27, 255, 0, 0); // Set the pixel color
+
+  time_display.show();
+
+}
+
+
 void zero() {
 
   time_display.setPixelColor(0, 255, 0, 0); // Set the pixel color
@@ -212,6 +314,101 @@ void zero() {
   time_display.show();
 
 }
+
+void ninefourtwo() {
+
+  time_display.setPixelColor(0, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(1, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(2, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(3, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(4, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(5, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(6, 255, 0, 0); // Set the pixel color
+
+  /*------------------------------------------------------------*/
+
+
+  time_display.setPixelColor(7, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(8, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(9, 255, 0, 0); // Set the pixel color
+  //  time_display.setPixelColor(10, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(11, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(12, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(13, 255, 0, 0); // Set the pixel color
+
+  /*------------------------------------------------------------*/
+
+
+  time_display.setPixelColor(14, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(15, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(16, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(17, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(18, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(19, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(20, 255, 0, 0); // Set the pixel color
+
+  /*------------------------------------------------------------*/
+
+
+  time_display.setPixelColor(21, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(22, 255, 0, 0);
+  //  time_display.setPixelColor(23, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(24, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(25, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(26, 255, 0, 0); // Set the pixel color
+  //   time_display.setPixelColor(27, 255, 0, 0); // Set the pixel color
+
+  time_display.show();
+
+}
+
+void oneeightfourtwo() {
+
+  time_display.setPixelColor(0, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(1, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(2, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(3, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(4, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(5, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(6, 255, 0, 0); // Set the pixel color
+
+  /*------------------------------------------------------------*/
+
+
+  time_display.setPixelColor(7, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(8, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(9, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(10, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(11, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(12, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(13, 255, 0, 0); // Set the pixel color
+
+  /*------------------------------------------------------------*/
+
+
+  time_display.setPixelColor(14, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(15, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(16, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(17, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(18, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(19, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(20, 255, 0, 0); // Set the pixel color
+
+  /*------------------------------------------------------------*/
+
+
+  time_display.setPixelColor(21, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(22, 255, 0, 0);
+  //  time_display.setPixelColor(23, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(24, 255, 0, 0); // Set the pixel color
+  // time_display.setPixelColor(25, 255, 0, 0); // Set the pixel color
+  time_display.setPixelColor(26, 255, 0, 0); // Set the pixel color
+  //   time_display.setPixelColor(27, 255, 0, 0); // Set the pixel color
+
+  time_display.show();
+
+}
+
 
 void time_flikr() {
   unsigned long currentMillis = millis();
@@ -260,20 +457,27 @@ void console_fade() {
 
 }
 
-
 void setup() {
-
   Serial.begin(9600);
+
   mp3.begin(9600);        // start mp3-communication
   mp3_2.begin(9600);        // start mp3-communication
   delay(500);             // wait for init
+
   mp3.sendCommand(CMD_SEL_DEV, 0, 2);   //select sd-card
+
+  mp3_2.sendCommand(CMD_SEL_DEV, 0, 2);   //select sd-card
+  delay(500);             // wait for init
+
   mp3.setVol(30);
   mp3.stop();
-  mp3_2.sendCommand(CMD_SEL_DEV, 0, 2);   //select sd-card
   mp3_2.setVol(30);
   mp3_2.stop();
+
+  machine.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
+  machine.clear(); // Set all pixel colors to 'off'
   Serial.println("Twins of Evil Attractions  - The Chamber 2024");
+
   pinMode(startbutton, INPUT_PULLUP); // set the button pin as an input
   pinMode (dooropen, INPUT_PULLUP); // define the button pin
   pinMode  (emergency_stop,  INPUT_PULLUP); // define the button pin
@@ -284,44 +488,48 @@ void setup() {
   pinMode  (scene4,  INPUT_PULLUP); // define the button pin
   pinMode  (scene5,  INPUT_PULLUP); // define the button pin
   pinMode  (scene6,  INPUT_PULLUP); // define the button pin
-  machine.begin(); // initialize the NeoPixel strip
-  machine.clear(); // initialize the NeoPixel strip
-  machine.setPixelColor(0, 255, 150, 0); // Set the pixel color
-  machine.show(); // Update the NeoPixel strip
-  door.attach(servoPin); //servo at pin 4
-  door.setSpeed( 5 );    // set servo speed
-  pixels.begin();
-  pixels.show(); // Initialize all pixels to off
-  time_display.begin();
-  // door.write(0); // will turn slowly
 
+  time_display.begin();
   time_display.show();
 
+
+
+  machine.setPixelColor(0, machine.Color(255, 255, 255));
 
 }
 
 void loop() {
 
-  unsigned long currentMillis = millis(); // Get the current time
-
-
-  if (console_fading ) {
-    console_fade();
+  unsigned long currentMillis = millis();
+  if (digitalRead(emergency_stop) == LOW && loop1_running) {
+    Serial.println("machine stopped");
+    mp3.stop();
+    machine.clear(); // Set all pixel colors to 'off'
+    for (int i = 0; i < 40; i++) {
+      machine.setPixelColor(i, 255, 255, 255); // Set the pixel color
+      machine.show(); // Update the NeoPixel strip
+    }
   }
-  else
-    console_fading = false;
 
   if (shock) {
     shocking();
+
   }
   else
     shock = false;
-
   if (bombs) {
     twink();
+
   }
   else
     bombs = false;
+
+  if (console) {
+    console_fade();
+
+  }
+  else
+    console = false;
 
   if (time_flicker) {
     time_flikr();
@@ -329,40 +537,7 @@ void loop() {
   }
   else
     time_flicker = false;
- 
- if (digitalRead(emergency_stop) == LOW) {
-    Serial.println("EMERGENCY CONDITIONS");
-    mp3.stop();
-    previousMillis = currentMillis;
-    emergency = true;
-    scene_1 = false;
-    console = false;
-    time_flicker = false;
-    shock = false;
-    state = 0;
 
-    for (int i = 0; i < 10; i++) {
-      machine.setPixelColor(i, 255, 255, 255); // Set the pixel color
-      machine.show(); // Update the NeoPixel strip
-
-    }
-  } else
-    emergency = false;
-
-  if (digitalRead(resetButton) == LOW) {
-    mp3.stop();
-    previousMillis = currentMillis;
-    console = false;
-    shock = false;
-    time_flicker = false;
-    machine.clear(); // initialize the NeoPixel strip
-    machine.show();
-    machine.setPixelColor(0, 255, 150, 0); // Set the pixel color
-    machine.show();
-    Serial.println("machine reset");
-    scene_1 = false;
-    state = 0;
-  }
 
 
   buttonState = digitalRead(dooropen);
@@ -401,156 +576,455 @@ void loop() {
     }
   }
   lastButtonState = buttonState;
-
   machine.show();
-
-
-  if (digitalRead(startbutton) == LOW) {
+  if (digitalRead(startbutton) == LOW && !loop1_running) {
+    Serial.println("power on");
+    console = true;
     mp3.play(1);
-    console_fading = true;
+
+    for (int i = 15; i < 20; i++) {
+      machine.setPixelColor(i, 255, 255, 255); // Set the pixel color
+    }
+    machine.show();
+    twentyfour();
     machine.setPixelColor(6, 50, 50, 50); // Set the pixel color
     machine.setPixelColor(7, 70, 50, 50); // Set the pixel color
     machine.setPixelColor(8, 40, 50, 255); // Set the pixel color
-    machine.setPixelColor(0, 255, 255, 255); // Set the pixel color
-      for (int i = 15; i < 20; i++) {
-      machine.setPixelColor(i, 50, 50, 50); // Set the pixel color
+    machine.setPixelColor(0, machine.Color(255, 0, 0));
+    Serial.println(" ACTOR NOW exit the machine");
+
+    for (int i = 15; i < 20; i++) {
+      machine.setPixelColor(i, 100, 100, 100); // Set the pixel color
+
       machine.show(); // Update the NeoPixel strip
     }
-    machine_on = true;
-    scene_1 = false;
-    previousMillis = currentMillis;
-    Serial.println("machine booting up");
-    Serial.println("get ready to begin");
+  }
+
+
+  if (digitalRead(resetButton) == LOW) {
+    Serial.println("machine reset");
+    mp3.stop();
+    machine_started_time = 0;
+    task2_time = 0;
+    task3_time = 0;
+    task4_time = 0;
+    task5_time = 0;
+    task6_time = 0;
+    task7_time = 0;
+    task8_time = 0;
+    task9_time = 0;
+    task10_time = 0;
+    task11_time = 0;
+    task12_time = 0;
+    task13_time = 0;
+    task14_time = 0;
+    JACK_time = 0;
+    STAB1_time = 0;
+    POWERUP_time = 0;
+    FINAL_time = 0;
+    HOME_time = 0;
+
+    machine.clear(); // Set all pixel colors to 'off'
+    machine.setPixelColor(0, machine.Color(255, 255, 255));
+    machine.show();
+    machine_started_running = false;
+    task2_running = false;
+    task3_running = false;
+    task4_running = false;
+    task5_running = false;
+    task6_running = false;
+    task7_running = false;
+    task8_running = false;
+    task9_running = false;
+    task10_running = false;
+    task11_running = false;
+    task12_running = false;
+    task13_running = false;
+    task14_running = false;
+    JACK_running = false;
+    STAB1_running = false;
+    POWERUP_running = false;
+    FINAL_running = false;
+    HOME_running = false;
+    loop1_running = false;
+    loop2_running = false;
+    loop3_running = false;
+    console = false;
 
   }
+
+
+
 
   if (digitalRead(scene1) == LOW) {
-    
-    mp3.play(2);
-    console_fading = false;
-    twentyfour();
-    machine.setPixelColor(0, 0, 255, 0); // Set the pixel color
-    Serial.println("scene begin");
-    previousMillis = currentMillis;
-    state = 1;
-  }
-
-  if (state == 1 && currentMillis - previousMillis >= 7000) {
-    machine.setPixelColor(5, 255, 255, 255); // Set the pixel color
-    Serial.println("steam on");
-    previousMillis = currentMillis;
-    state = 2;
-  }
-
-  if (state == 2 && currentMillis - previousMillis >= 2500) {
-    machine.setPixelColor(5, 0, 0, 0); // Set the pixel color
-    Serial.println("steam off");
-    previousMillis = currentMillis;
-    state = 3;
-  }
-
-  if (state == 3 && currentMillis - previousMillis >= 1300) {
-    machine.setPixelColor(9, 255, 255, 255); // Set the pixel color
-    machine.setPixelColor(10, 255, 255, 255); // Set the pixel color
-    Serial.println("blast shield on");
-
-    previousMillis = currentMillis;
-    state = 4;
-  }
-
-
-
-  // ill remain in contact with you using a radio
-
-
-  if (state == 4 && currentMillis - previousMillis >= 10000) {
-
-   
-    machine.setPixelColor(9, 0, 0, 0); // Set the pixel color
-    machine.setPixelColor(10, 0, 0, 0); // Set the pixel color
-    Serial.println("blast shield off");
-    Serial.println("travelling into dino scene");
-    previousMillis = currentMillis;
-    state = 5;
-     time_flicker = true;
-  }
-
-  if (state == 5 && currentMillis - previousMillis >= 20000) {
-    Serial.println("dino scene");
-    previousMillis = currentMillis;
-    state = 6;
-  }
-
-  
-  if (state == 6 && currentMillis - previousMillis >= 20000) {
-    machine.setPixelColor(5, 0, 0, 0); // Set the pixel color
-    machine.setPixelColor(9, 0, 0, 0); // Set the pixel color
-    machine.setPixelColor(10, 0, 0, 0); // Set the pixel color
-    console = true;
-    Serial.println("travelling into water scene");
-    previousMillis = currentMillis;
-    state = 7;
-  }
-  if (state == 7 && currentMillis - previousMillis >= 19000) {
     console = false;
-    for (int i = 15; i < 20; i++) {
-      machine.setPixelColor(i, 0, 0, 255); // Set the pixel color
+    twentyfour();
+    mp3.play(2);
+    machine.setPixelColor(0, 0, 255, 0); // Set the pixel color
+    machine_started_time = millis() + 0;                                   // machine on
+    task2_time = millis() + 6500;                                            // steam on
+    task3_time = millis() + 9200;                                           // steam off
+    task4_time = millis() + 10700;                                          //voice - blast shield on
+    task5_time = millis() + 22000;                                         //voice - blast shield off
+    task6_time = millis() + 23000;                                        // travelling
+    task7_time = millis() + 36500;                                      //  dino scene
+    task8_time = millis() + 61500;                                     // travelling
+    task9_time = millis() + 71500;                                     // water scene
+    task10_time = millis() + 93000;                                    //paradox fail
+    task11_time = millis() + 105000;                                    //power fail
+    task12_time = millis() + 106000;                                    //shocking
+    task13_time = millis() + 105000;                                    // war scene
+    task14_time = millis() + 135000;                                   // bombs off
+    JACK_time = millis() + 0;                                       //JACK TIME
+    STAB1_time = millis() + 1000;                                   //JACK KILLS
+    POWERUP_time = millis() + 2000;                                  //POWER BACK
+    FINAL_time = millis() + 4000;
+    HOME_time = millis() + 8000;
+
+    JACK_running = false;
+    STAB1_running = false;
+    POWERUP_running = false;
+    FINAL_running = false;
+    HOME_running = false;
+    machine_started_running = false;
+    task2_running = false;
+    task3_running = false;
+    task4_running = false;
+    task5_running = false;
+    task6_running = false;
+    task7_running = false;
+    task8_running = false;
+    task9_running = false;
+    task10_running = false;
+    task11_running = false;
+    task12_running = false;
+    task13_running = false;
+    task14_running = false;
+
+    loop1_running = true;
+    loop2_running = false;
+    loop3_running = false;
+  }
+
+
+
+
+  if (loop1_running) {
+    unsigned long now = millis();
+
+    // Check if it's time to run task 1
+    if (now >= machine_started_time && !machine_started_running) {
+      machine_started_running = true;
+
+      task_1();                                     // machine boot up
+
+    }
+
+    if (currentMillis - previousMillis >= interval) {
+      previousMillis = currentMillis;
+
+
+
+
+    }
+    // Check if it's time to run task 2
+    if (now >= task2_time && !task2_running) {
+      task2_running = true;
+      machine.setPixelColor(5, 255, 255, 255); // Set the pixel color
+      machine.setPixelColor(6, 50, 50, 50); // Set the pixel color
+      machine.setPixelColor(7, 70, 50, 50); // Set the pixel color
+      machine.setPixelColor(8, 40, 50, 255); // Set the pixel color
+      //   digitalWrite(rly_1, HIGH);
+      machine.setPixelColor(0, machine.Color(255, 0, 0));
+      Serial.println("steam on");
+      Serial.println("GET READY TO CLOSE THE DOOR!!");
+
+      if (currentMillis - previousMillis >= interval) {
+        previousMillis = currentMillis;
+
+
+        machine.setPixelColor(11, machine.Color(random(256), random(256), random(256)));
+        machine.setPixelColor(12, machine.Color(random(256), random(256), random(256)));
+        machine.setPixelColor(13, machine.Color(random(256), random(256), random(256)));
+        machine.setPixelColor(14, machine.Color(random(256), random(256), random(256)));
+
+      }
+
+    }
+
+    if (now >= task3_time && !task3_running) {
+      task3_running = true;
+      machine.setPixelColor(5, 0, 0, 0); // Set the pixel color
+      //  digitalWrite(rly_1, LOW);
+      Serial.println("steam off  --  door now locked");
+
+
+    }
+
+    if (now >= task4_time && !task4_running) {
+      task4_running = true;
+      Serial.println("voice begin / blast shield on");
+
+      machine.setPixelColor(9, 255, 255, 255); // Set the pixel color
+      machine.setPixelColor(10, 255, 255, 255); // Set the pixel color
+
+
+    }
+
+    if (now >= task5_time && !task5_running) {
+      task5_running = true;
+      Serial.println(" blast shield off and close ");
+      machine.setPixelColor(9, 0, 0, 0); // Set the pixel color
+      machine.setPixelColor(10, 0, 0, 0); // Set the pixel color
+      time_flicker = true;
+
+
+    }
+    if (now >= task6_time && !task6_running) {
+      task6_running = true;
+
+      Serial.println(" travelling into dino scene ");
+      Serial.println(" MOVE MACHINE TO POSITION ONE");
+
+
+
+    }
+    if (now >= task7_time && !task7_running) {
+      task7_running = true;
+      time_flicker = false;
+      time_display.clear();
+      Serial.println(" dinosaur scene ");
+
+      zero();
+      for (int i = 15; i < 20; i++) {
+        machine.setPixelColor(i, 255, 255, 0); // Set the pixel color
+        machine.show(); // Update the NeoPixel strip
+      }
+
+
+      machine.setPixelColor(5, 0, 255, 0); // Set the pixel color
+      machine.setPixelColor(9, 0, 255, 0); // Set the pixel color
+      machine.setPixelColor(10, 0, 255, 0); // Set the pixel color
+    }
+    if (now >= task8_time && !task8_running) {
+      task8_running = true;
+      time_flicker = true;
+      Serial.println(" dino scene into water scene ");
+      Serial.println(" CLOSE THE BLAST SHIELD ");
+      Serial.println(" MOVE MACHINE TO POSITION 2 ");
+      for (int i = 15; i < 20; i++) {
+        machine.setPixelColor(i, 0, 0, 0); // Set the pixel color
+        machine.show(); // Update the NeoPixel strip
+      }
+      //digitalWrite(rly_2, LOW);
+      machine.setPixelColor(5, 0, 0, 0); // Set the pixel color
+      machine.setPixelColor(9, 0, 0, 0); // Set the pixel color
+      machine.setPixelColor(10, 0, 0, 0); // Set the pixel color
+
+    }
+    if (now >= task9_time && !task9_running) {
+      task9_running = true;
+      time_flicker = false;
+
+      Serial.println(" water scene ");   // SCREEN SHOWING WATER BUBBLES?
+
+      for (int i = 15; i < 20; i++) {
+        machine.setPixelColor(i, 0, 0, 255); // Set the pixel color
+        machine.show(); // Update the NeoPixel strip
+      }
+      time_display.clear();
+      five_ten();
+      time_display.show();
+      machine.setPixelColor(6, 0, 0, 255); // Set the pixel color
+      machine.setPixelColor(5, 0, 0, 255); // Set the pixel color
+      machine.setPixelColor(9, 0, 0, 255); // Set the pixel color
+      machine.setPixelColor(10, 0, 0, 255); // Set the pixel color
+    }
+    if (now >= task10_time && !task10_running) {
+      task10_running = true;
+      Serial.println(" paradox failing scene");
+      machine.setPixelColor(1, 255, 255, 255); // Set the pixel color    // door locked
+      machine.setPixelColor(2, 255, 255, 255); // Set the pixel color
+      machine.setPixelColor(3, 255, 255, 255); // Set the pixel color
+      machine.setPixelColor(4, 255, 255, 255); // Set the pixel color     // door locked
+
+      // digitalWrite(rly_1, HIGH);
+      for (int i = 5; i < 20; i++) {
+        machine.setPixelColor(i, 255, 0, 0); // Set the pixel color
+        machine.show(); // Update the NeoPixel strip
+      }
+    }
+    if (now >= task11_time && !task11_running) {
+      task11_running = true;
+      Serial.println(" power fail ");
+      //  digitalWrite(rly_1, LOW);
+      machine.clear(); // Set all pixel colors to 'off'
+      time_flicker = true;
+      for (int i = 1; i < 20; i++) {
+        machine.setPixelColor(i, 0, 0, 0); // Set the pixel color
+        machine.show(); // Update the NeoPixel strip
+      }
+    }
+    if (now >= task12_time && !task12_running) {
+      task12_running = true;
+
+      Serial.println(" SHOCKING!! ");
+
+
+      shock = true;
+
+
     }
 
 
-    machine.setPixelColor(6, 0, 0, 255); // Set the pixel color
-    machine.setPixelColor(5, 0, 0, 255); // Set the pixel color
-    machine.setPixelColor(9, 0, 0, 255); // Set the pixel color
-    machine.setPixelColor(10, 0, 0, 255); // Set the pixel color
-    Serial.println("water scene");
-    previousMillis = currentMillis;
-    state = 8;
+    if (now >= task13_time && !task13_running) {
+      task13_running = true;
+      time_flicker = false;
+      shock = false;
+      machine.setPixelColor(0, machine.Color(255, 0, 0));
+      Serial.println("GET READY TO OPEN THE DOOR!!");
+      machine.setPixelColor(1, 0, 255, 0); // Set the pixel color    // door locked
+      machine.setPixelColor(2, 0, 255, 0); // Set the pixel color
+      machine.setPixelColor(3, 0, 255, 0); // Set the pixel color
+      machine.setPixelColor(4, 0, 255, 0); // Set the pixel color     // door locked
+
+      Serial.println("war scene");
+      bombs = true;
+      time_display.clear();
+      ninefourtwo();
+
+      //  digitalWrite(rly_3, HIGH);
+      twink();
+      //   digitalWrite(rly_1, HIGH);
+
+    }
+
+
+    if (now >= task14_time && !task14_running) {
+      task14_running = true;
+      Serial.println("BOMBS OFF");
+      // digitalWrite(rly_1, LOW);
+      bombs = false;
+      //     digitalWrite(rly_3, LOW);
+      //   digitalWrite(rly_4, LOW);
+
+      machine.setPixelColor(1, 255, 0, 0); // Set the pixel color    // door locked
+      machine.setPixelColor(2, 255, 0, 0); // Set the pixel color
+      machine.setPixelColor(3, 255, 0, 0); // Set the pixel color
+      machine.setPixelColor(4, 255, 0, 0); // Set the pixel color     // door locked
+      for (int i = 1; i < 20; i++) {
+        machine.setPixelColor(i, 0, 0, 0); // Set the pixel color
+        machine.show(); // Update the NeoPixel strip
+      }
+
+      Serial.println("MOVE MACHINE TO JACK POSITION");
+      time_display.clear();
+      oneeightfourtwo();
+    }
+
+    if (digitalRead(scene2) == LOW) {
+      mp3.play(3);
+     
+      loop2_running = true;
+      loop1_running = false:
+
+
+    }
+    if (loop2_running) {
+      time_display.clear();
+      if (now >= JACK_time && !JACK_running) {
+        JACK_running = true;
+
+        oneeightfourtwo();
+        time_display.show();
+        machine.setPixelColor(0, machine.Color(255, 0, 0));
+        Serial.println(" JACK TIME ");
+        Serial.println(" GET READY TO OPEN THE DOOR ");
+        machine.setPixelColor(1, 0, 50, 0); // Set the pixel color    // door locked
+        machine.setPixelColor(2, 0, 50, 0); // Set the pixel color
+        machine.setPixelColor(3, 0, 50, 0); // Set the pixel color
+        machine.setPixelColor(4, 0, 50, 0); // Set the pixel color     // door locked
+      }
+
+      if (now >= STAB1_time && !STAB1_running) {
+        STAB1_running = true;
+        Serial.println(" FEAR BUILDING ");
+        for (int i = 15; i < 40; i++) {
+          machine.setPixelColor(i, 255, 0, 0); // Set the pixel color
+          machine.show(); // Update the NeoPixel strip
+        }
+
+      }
+
+      if (now >= POWERUP_time && !POWERUP_running) {
+        POWERUP_running = true;
+
+        Serial.println(" WAIT FOR POWER BOOT SOUND ");
+        Serial.println(" THEN GET READY TO CLOSE THE DOOR ");
+        for (int i = 15; i < 40; i++) {
+          machine.setPixelColor(i, 255, 102, 0); // Set the pixel color
+          machine.show(); // Update the NeoPixel strip
+        }
+
+        machine.setPixelColor(0, machine.Color(255, 0, 0));
+      }
+
+      if (now >= FINAL_time && !FINAL_running) {
+        FINAL_running = true;
+
+        if (currentMillis - previousMillis >= interval) {
+          previousMillis = currentMillis;
+
+
+          machine.setPixelColor(11, machine.Color(random(256), random(256), random(256)));
+          machine.setPixelColor(12, machine.Color(random(256), random(256), random(256)));
+          machine.setPixelColor(13, machine.Color(random(256), random(256), random(256)));
+          machine.setPixelColor(14, machine.Color(random(256), random(256), random(256)));
+
+        }
+        for (int i = 15; i < 40; i++) {
+          machine.setPixelColor(i, 0, 0, 0); // Set the pixel color
+          machine.show(); // Update the NeoPixel strip
+        }
+        Serial.println(" COMING HOME - MOVE MACHINE TO BEGINNING ");
+        Serial.println(" paradox speed upto HOME scene ");
+        Serial.println(" MOVE MACHINE TO BEGINNING POSITION");
+
+        machine.setPixelColor(1, 0, 50, 0); // Set the pixel color    // door locked
+        machine.setPixelColor(2, 0, 50, 0); // Set the pixel color
+        machine.setPixelColor(3, 0, 50, 0); // Set the pixel color
+        machine.setPixelColor(4, 0, 50, 0); // Set the pixel color     // door locked
+        machine.setPixelColor(6, 50, 50, 50); // Set the pixel color
+        machine.setPixelColor(7, 70, 50, 50); // Set the pixel color
+        machine.setPixelColor(8, 40, 50, 255); // Set the pixel color
+        machine.setPixelColor(1, 255, 0, 0); // Set the pixel color
+        machine.setPixelColor(2, 0, 255, 255); // Set the pixel color
+        machine.setPixelColor(3, 255, 0, 0); // Set the pixel color
+        machine.setPixelColor(4, 0, 255, 255); // Set the pixel color
+
+      }
+
+      if (now >= HOME_time && !HOME_running) {
+        HOME_running = true;
+        Serial.println("HOME TIME");
+
+
+        machine.setPixelColor(1, 0, 255, 0); // Set the pixel color
+        machine.setPixelColor(2, 0, 255, 0); // Set the pixel color
+        machine.setPixelColor(3, 0, 255, 0); // Set the pixel color
+        machine.setPixelColor(4, 0, 255, 0); // Set the pixel color
+        machine.setPixelColor(6, 50, 50, 50); // Set the pixel color
+        machine.setPixelColor(7, 70, 50, 50); // Set the pixel color
+        machine.setPixelColor(8, 40, 50, 255); // Set the pixel color
+        for (int i = 15; i < 20; i++) {
+          machine.setPixelColor(i, 255, 255, 255); // Set the pixel color
+          machine.show(); // Update the NeoPixel strip
+        }
+
+      }
+
+      machine.show();   // Send the updated pixel colors to the hardware.
+      time_display.show();
+    }
   }
-  if (state == 8 && currentMillis - previousMillis >= 20000) {
-    shock = true;
-
-    Serial.println("shocking scene");
-    previousMillis = currentMillis;
-    state = 9;
-  }
-  if (state == 9 && currentMillis - previousMillis >= 10000) {
-    Serial.println("travel to war");
-
-    shock = false;
-
-    state = 10;
-
-  }
-
-  if (state == 10 && currentMillis - previousMillis >= 10000) {
-
-    bombs = true;
-    Serial.println("war door scene");
-
-    // turn door green here
-    previousMillis = currentMillis;
-    state = 11;
-  }
-
-  if (state == 11 && currentMillis - previousMillis >= 10000) {
-
-    bombs = true;
-    Serial.println("war door close ");
-
-    // turn door red here
-    previousMillis = currentMillis;
-    state = 12;
-  }
-  if (state == 12 && currentMillis - previousMillis >= 10000) {
-
-    bombs = true;
-    Serial.println("war scene");
-
-    // turn door green here
-    previousMillis = currentMillis;
-    state = 13;
-  }
-  machine.show(); // Update the NeoPixel strip
-  time_display.show();
-
 }
