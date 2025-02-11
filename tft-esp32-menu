@@ -51,6 +51,33 @@ const int wifiMenuLength = sizeof(wifiMenu) / sizeof(wifiMenu[0]);
 int selectedWiFi = 0;
 bool inWiFiMenu = false;
 
+const char* diagnosticsMenu[] = {
+    "Voltage Readings", 
+    "Power Supply Status", 
+    "Temperature Sensor", 
+    "I/O Status", 
+    "Run Self-Test",  // NEW OPTION
+    "Back"
+};
+const int diagnosticsLength = sizeof(diagnosticsMenu) / sizeof(diagnosticsMenu[0]);
+int selectedDiagnostics = 0;
+bool inDiagnosticsMenu = false;
+
+const char* selfTestSteps[] = {
+    "Checking Relays...", 
+    "Checking Buttons...", 
+    "Checking NeoPixels...", 
+    "Self-Test Completed"
+};
+const int selfTestStepsLength = sizeof(selfTestSteps) / sizeof(selfTestSteps[0]);
+
+int currentSelfTestStep = 0;
+bool inSelfTest = false;
+bool selfTestChanged = true;
+String selfTestResults[4] = {"", "", "", ""};  // Stores pass/fail results for 4 test steps
+
+
+
 // Variables to store SSID and password
 String wifiSSID = "Not Set";
 String wifiPassword = "Not Set";
@@ -66,7 +93,9 @@ void displayMenu() {
 
     // Set dynamic title
     String title;
-    if (inWiFiMenu) {
+    if (inDiagnosticsMenu) {
+        title = "Diagnostics";
+    } else if (inWiFiMenu) {
         title = "WiFi Menu";
     } else if (inShowMenu) {
         title = "Show Menu";
@@ -92,14 +121,17 @@ void displayMenu() {
     const char** currentMenu;
     int menuSize, selectedItem;
     
-    if (inWiFiMenu) {
+    if (inDiagnosticsMenu) {
+        currentMenu = diagnosticsMenu;
+        menuSize = diagnosticsLength;
+        selectedItem = selectedDiagnostics;
+    } else if (inWiFiMenu) {
         currentMenu = wifiMenu;
         menuSize = wifiMenuLength;
         selectedItem = selectedWiFi;
     } else if (inShowMenu) {
-         currentMenu = showList;  // Renamed from showMenu[]
-    menuSize = showListLength;
-    selectedItem = selectedShow;
+        currentMenu = showList;
+        menuSize = showListLength;
         selectedItem = selectedShow;
     } else if (inBluetoothMenu) {
         currentMenu = bluetoothMenu;
@@ -153,8 +185,9 @@ void executeMenuAction(int option) {
             menuChanged = true;
             break;
 
-        case 4:  // Open Diagnostics
-            runDiagnostics();
+         case 4:  // Open Diagnostics Menu
+            inDiagnosticsMenu = true;
+            selectedDiagnostics = 0;
             menuChanged = true;
             break;
     }
@@ -311,6 +344,131 @@ void executeShowAction(int option) {
             break;
     }
 }
+void executeDiagnosticsAction(int option) {
+    tft.fillScreen(ST77XX_BLACK);
+    tft.setCursor(10, 10);
+    tft.setTextSize(1);
+    tft.setTextColor(ST77XX_WHITE);
+
+    switch (option) {
+        case 0:  // Voltage Readings
+            Serial.println("🔋 Requesting Voltage Readings...");
+            Serial2.println("REQUEST_DIAGNOSTICS");  
+            delay(200);
+            readMegaDiagnostics();
+            break;
+
+        case 1:  // Power Supply Status
+            Serial.println("🔌 Requesting Power Status...");
+            Serial2.println("REQUEST_PWR_STATUS");
+            delay(200);
+            readMegaDiagnostics();
+            break;
+
+        case 2:  // Temperature Sensor
+            Serial.println("🌡️ Requesting Temperature...");
+            Serial2.println("REQUEST_TEMP");
+            delay(200);
+            readMegaDiagnostics();
+            break;
+
+        case 3:  // I/O Status
+            Serial.println("📡 Checking I/O Status...");
+            Serial2.println("REQUEST_IO_STATUS");
+            delay(200);
+            readMegaDiagnostics();
+            break;
+
+        case 4:  // Run Self-Test
+            Serial.println("🔧 Starting Self-Test...");
+            inSelfTest = true;
+            currentSelfTestStep = 0;
+            selfTestChanged = true;
+            break;
+
+        case 5:  // Back to Main Menu
+            Serial.println("Returning to Main Menu...");
+            inDiagnosticsMenu = false;  // ✅ Exit Diagnostics Menu
+            selectedMenu = 0;           // ✅ Reset to first item in Main Menu
+            menuChanged = true;         // ✅ Force screen update
+            break;
+    }
+}
+
+void readMegaDiagnostics() {
+    tft.fillScreen(ST77XX_BLACK);
+    tft.setCursor(10, 10);
+    tft.setTextSize(1);
+    tft.setTextColor(ST77XX_WHITE);
+    tft.println("📊 Voltage Readings:");
+
+    while (Serial2.available()) {
+        String receivedData = Serial2.readStringUntil('\n');
+        receivedData.trim();
+        Serial.println("Received from Mega: " + receivedData);
+
+        tft.setCursor(10, tft.getCursorY() + 10);
+        tft.println(receivedData);
+    }
+}
+void displaySelfTest() {
+    tft.fillScreen(ST77XX_BLACK);
+    tft.setCursor(10, 10);
+    tft.setTextSize(1);
+    tft.setTextColor(ST77XX_WHITE);
+
+    if (currentSelfTestStep >= selfTestStepsLength) {
+        tft.println("✅ Self-Test Completed!");
+        delay(1500);
+        inSelfTest = false;
+        inDiagnosticsMenu = true;
+        menuChanged = true;
+        return;
+    }
+
+    tft.print("Step: ");
+    tft.print(currentSelfTestStep + 1);
+    tft.print(" / ");
+    tft.println(selfTestStepsLength);
+
+    tft.setCursor(10, 30);
+    tft.println(selfTestSteps[currentSelfTestStep]);
+
+    // Display PASS/FAIL result for previous step
+    if (currentSelfTestStep > 0) {
+        tft.setCursor(10, 50);
+        tft.print("Last Test: ");
+        tft.setTextColor(selfTestResults[currentSelfTestStep - 1] == "PASS" ? ST77XX_GREEN : ST77XX_RED);
+        tft.println(selfTestResults[currentSelfTestStep - 1]);
+        tft.setTextColor(ST77XX_WHITE);  // Reset text color
+    }
+}
+
+
+
+
+
+String readMegaSelfTestResult() {
+    String result = "UNKNOWN";
+    unsigned long timeout = millis() + 2000;  // 2-second timeout
+
+    while (millis() < timeout) {
+        if (Serial2.available()) {  // Read from Mega
+            String receivedData = Serial2.readStringUntil('\n');
+            receivedData.trim();
+            Serial.println("Received from Mega: " + receivedData);
+
+            if (receivedData == "PASS" || receivedData == "FAIL") {
+                result = receivedData;
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+
+
 
 
 
@@ -344,7 +502,6 @@ void setup() {
 
 
 int lastCLK = digitalRead(ENCODER_CLK);  // Track last encoder state
-
 void loop() {
     int currentCLK = digitalRead(ENCODER_CLK);
     int dtState = digitalRead(ENCODER_DT);
@@ -353,23 +510,27 @@ void loop() {
     if (currentCLK != lastCLK) {  
         if (dtState != currentCLK) {  // Clockwise Rotation
             Serial.println("Rotated CLOCKWISE");
-            if (inWiFiMenu) {
+            if (inDiagnosticsMenu) {
+                selectedDiagnostics = (selectedDiagnostics + 1) % diagnosticsLength;
+            } else if (inWiFiMenu) {
                 selectedWiFi = (selectedWiFi + 1) % wifiMenuLength;
             } else if (inShowMenu) {
-                if (inShowMenu) {
-    selectedShow = (selectedShow - 1 + showListLength) % showListLength;
-}
-
+                selectedShow = (selectedShow + 1) % showListLength;
             } else if (inBluetoothMenu) {
                 selectedBluetooth = (selectedBluetooth + 1) % bluetoothLength;
             } else if (inSubMenu) {
                 selectedSetting = (selectedSetting + 1) % settingsLength;
+            } else if (inSelfTest) {
+                // Prevent rotation from affecting self-test steps
+                Serial.println("Self-Test in Progress - Rotation Ignored");
             } else {
                 selectedMenu = (selectedMenu + 1) % menuLength;
             }
         } else {  // Counterclockwise Rotation
             Serial.println("Rotated COUNTERCLOCKWISE");
-            if (inWiFiMenu) {
+            if (inDiagnosticsMenu) {
+                selectedDiagnostics = (selectedDiagnostics - 1 + diagnosticsLength) % diagnosticsLength;
+            } else if (inWiFiMenu) {
                 selectedWiFi = (selectedWiFi - 1 + wifiMenuLength) % wifiMenuLength;
             } else if (inShowMenu) {
                 selectedShow = (selectedShow - 1 + showListLength) % showListLength;
@@ -377,6 +538,9 @@ void loop() {
                 selectedBluetooth = (selectedBluetooth - 1 + bluetoothLength) % bluetoothLength;
             } else if (inSubMenu) {
                 selectedSetting = (selectedSetting - 1 + settingsLength) % settingsLength;
+            } else if (inSelfTest) {
+                // Prevent rotation from affecting self-test steps
+                Serial.println("Self-Test in Progress - Rotation Ignored");
             } else {
                 selectedMenu = (selectedMenu - 1 + menuLength) % menuLength;
             }
@@ -386,12 +550,36 @@ void loop() {
 
     lastCLK = currentCLK;  // Update last encoder state
 
+ // 🚀 Handle Self-Test Step Progression 🚀
+    if (inSelfTest && digitalRead(ENCODER_SW) == LOW) {
+        delay(300);  
+
+        Serial.println("🔧 Advancing Self-Test Step...");
+        Serial2.println("SELF_TEST_STEP_" + String(currentSelfTestStep));  
+
+        // Read pass/fail response
+        String result = readMegaSelfTestResult();
+        selfTestResults[currentSelfTestStep] = result;
+
+        selfTestChanged = true;
+        currentSelfTestStep++;
+
+        if (currentSelfTestStep >= selfTestStepsLength) {
+            Serial.println("✅ Self-Test Completed!");
+            inSelfTest = false;
+            inDiagnosticsMenu = true;
+            menuChanged = true;
+        }
+    }
+
     // Check button press (Encoder Click)
-    if (digitalRead(ENCODER_SW) == LOW) {
+    if (!inSelfTest && digitalRead(ENCODER_SW) == LOW) {
         Serial.println("Encoder Button Pressed!");
         delay(300);  // Simple debounce
 
-        if (inWiFiMenu) {
+        if (inDiagnosticsMenu) {
+            executeDiagnosticsAction(selectedDiagnostics);
+        } else if (inWiFiMenu) {
             executeWiFiAction(selectedWiFi);
         } else if (inShowMenu) {
             executeShowAction(selectedShow);
@@ -402,6 +590,12 @@ void loop() {
         } else {
             executeMenuAction(selectedMenu);
         }
+    }
+
+    // Update Self-Test Display
+    if (selfTestChanged) {
+        displaySelfTest();
+        selfTestChanged = false;
     }
 
     // Update menu display when selection changes
