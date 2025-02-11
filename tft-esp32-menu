@@ -1,56 +1,208 @@
 #include <Wire.h>
-#include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
-#include <SD.h>
-#include <SparkFunSX1509.h>
-#include "BluetoothSerial.h"
 
-// SX1509 I2C Address
-#define SX1509_ADDRESS 0x3E
-SX1509 sx1509;
 
 // TFT Display Pins
 #define TFT_CS 5
 #define TFT_RST 4
 #define TFT_DC 2
-#define TFT_BL 32  // TFT Backlight
+#define TFT_BL 32
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
-int tftBrightness = 128;  // Default brightness (range 0-255)
 
-// SD Card
-#define SD_CS 15
+// Rotary Encoder Pins (Now directly on ESP32)
+#define ENCODER_CLK 34
+#define ENCODER_DT 35
+#define ENCODER_SW 33
 
-// Rotary Encoder
-#define ENCODER_CLK 2
-#define ENCODER_DT 1
-#define ENCODER_SW 0
-int lastEncoderState;
-int selectedItem = 0;
+
+bool menuChanged = true;
+int selectedMenu = 0;
 bool inSubMenu = false;
-int subMenuIndex = 0;
 
-// Bluetooth
-BluetoothSerial SerialBT;
-bool bluetoothEnabled = false;
+// Menu Options
+const char* menuItems[] = { "Bluetooth Menu", "Show Menu", "WiFi Menu", "Settings", "Diagnostics" };
+const int menuLength = sizeof(menuItems) / sizeof(menuItems[0]);
 
-// Main Menu Items
-const char* mainMenuItems[] = { "Bluetooth Menu", "Show Menu", "WiFi Menu", "Settings Menu", "Diagnostics" };
-const int mainMenuSize = sizeof(mainMenuItems) / sizeof(mainMenuItems[0]);
+// Submenu Options
+const char* settingsMenu[] = { "TFT Brightness", "Volume Control", "NeoPixel Brightness", "Back" };
+const int settingsLength = sizeof(settingsMenu) / sizeof(settingsMenu[0]);
+int selectedSetting = 0;
 
-// Submenus
-const char* bluetoothMenu[] = { "Enable BT", "Disable BT", "Status", "Back" };
-const int bluetoothMenuSize = sizeof(bluetoothMenu) / sizeof(bluetoothMenu[0]);
+// TFT Brightness Variable
+int tftBrightness = 128;  // Default brightness (0-255)
 
-char fileList[10][20];  // Store up to 10 file names
-int fileCount = 0;
-bool isShowMenuActive = false;
-bool isFileOpened = false;
-bool isDeleteConfirm = false;
 
-// Active submenu
-const char** activeSubMenu;
-int activeSubMenuSize = 0;
+const char* bluetoothMenu[] = {"Toggle Bluetooth", "Connection Details", "Back"};
+const int bluetoothLength = sizeof(bluetoothMenu) / sizeof(bluetoothMenu[0]);
+int selectedBluetooth = 0;
+bool inBluetoothMenu = false;
+bool bluetoothEnabled = false;  // Default Bluetooth state
+
+
+const char* showList[] = {"Show 1", "Show 2", "Show 3", "Back"};  // Renamed from showMenu[]
+const int showListLength = sizeof(showList) / sizeof(showList[0]);
+int selectedShow = 0;
+bool inShowMenu = false;
+
+
+const char* wifiMenu[] = {"Enter SSID", "Enter Password", "Connect to WiFi", "Back"};
+const int wifiMenuLength = sizeof(wifiMenu) / sizeof(wifiMenu[0]);
+int selectedWiFi = 0;
+bool inWiFiMenu = false;
+
+// Variables to store SSID and password
+String wifiSSID = "Not Set";
+String wifiPassword = "Not Set";
+bool wifiConnected = false;
+
+
+
+void displayMenu() {
+    tft.fillScreen(ST77XX_BLACK); // Clear screen
+
+    // Draw title bar background
+    tft.fillRect(0, 0, tft.width(), 15, ST77XX_BLUE);
+
+    // Set dynamic title
+    String title;
+    if (inWiFiMenu) {
+        title = "WiFi Menu";
+    } else if (inShowMenu) {
+        title = "Show Menu";
+    } else if (inBluetoothMenu) {
+        title = "Bluetooth Menu";
+    } else if (inSubMenu) {
+        title = "Settings";
+    } else {
+        title = "Main Menu";
+    }
+
+    // Center Title
+    int16_t x1, y1;
+    uint16_t w, h;
+    tft.getTextBounds(title, 0, 0, &x1, &y1, &w, &h);
+    int centerX = (tft.width() - w) / 2;
+    tft.setCursor(centerX, 4);
+    tft.setTextColor(ST77XX_WHITE);
+    tft.setTextSize(1);
+    tft.print(title);
+
+    // Draw menu items
+    const char** currentMenu;
+    int menuSize, selectedItem;
+    
+    if (inWiFiMenu) {
+        currentMenu = wifiMenu;
+        menuSize = wifiMenuLength;
+        selectedItem = selectedWiFi;
+    } else if (inShowMenu) {
+         currentMenu = showList;  // Renamed from showMenu[]
+    menuSize = showListLength;
+    selectedItem = selectedShow;
+        selectedItem = selectedShow;
+    } else if (inBluetoothMenu) {
+        currentMenu = bluetoothMenu;
+        menuSize = bluetoothLength;
+        selectedItem = selectedBluetooth;
+    } else if (inSubMenu) {
+        currentMenu = settingsMenu;
+        menuSize = settingsLength;
+        selectedItem = selectedSetting;
+    } else {
+        currentMenu = menuItems;
+        menuSize = menuLength;
+        selectedItem = selectedMenu;
+    }
+
+    for (int i = 0; i < menuSize; i++) {
+        if (i == selectedItem) {
+            tft.setTextColor(ST77XX_GREEN);  // Highlight selected item
+        } else {
+            tft.setTextColor(ST77XX_WHITE);
+        }
+        tft.setCursor(10, 20 + (i * 10));
+        tft.print(currentMenu[i]);
+    }
+}
+
+
+void executeMenuAction(int option) {
+    switch (option) {
+        case 0:  // Open Bluetooth Menu
+            inBluetoothMenu = true;
+            selectedBluetooth = 0;
+            menuChanged = true;
+            break;
+
+        case 1:  // Open Show Menu
+            inShowMenu = true;
+            selectedShow = 0;
+            menuChanged = true;
+            break;
+
+        case 2:  // Open WiFi Menu
+            inWiFiMenu = true;
+            selectedWiFi = 0;
+            menuChanged = true;
+            break;
+
+        case 3:  // Open Settings Menu
+            inSubMenu = true;
+            selectedSetting = 0;
+            menuChanged = true;
+            break;
+
+        case 4:  // Open Diagnostics
+            runDiagnostics();
+            menuChanged = true;
+            break;
+    }
+}
+
+
+void executeSettingsAction(int option) {
+  Serial2.println("BUZZ");  // Send buzz command to Mega
+  switch (option) {
+    case 0: adjustTFTBrightness(); break;
+    case 1: adjustVolume(); break;
+    case 2: adjustNeoPixelBrightness(); break;
+    case 3:
+      inSubMenu = false;
+      menuChanged = true;
+      break;
+  }
+}
+
+void toggleBluetooth() {
+  Serial.println("Toggling Bluetooth...");
+}
+
+void showMenu() {
+  Serial.println("Future expansion: Load shows from SD card");
+}
+
+void connectWiFi() {
+  Serial.println("Connecting to WiFi...");
+}
+
+void adjustTFTBrightness() {
+  Serial.println("Adjusting TFT brightness...");
+  tftBrightness = (tftBrightness + 50) % 256;
+  analogWrite(TFT_BL, tftBrightness);
+}
+
+void adjustVolume() {
+  Serial.println("Adjusting volume...");
+}
+
+void adjustNeoPixelBrightness() {
+  Serial.println("Adjusting NeoPixel brightness...");
+}
+
+void runDiagnostics() {
+  Serial.println("Running system diagnostics...");
+}
 
 
 void showLoadingScreen() {
@@ -96,29 +248,86 @@ void showLoadingScreen() {
   delay(1000);  // Hold before entering menu
 }
 
+void executeBluetoothAction(int option) {
+    switch (option) {
+        case 0:  // Toggle Bluetooth
+            bluetoothEnabled = !bluetoothEnabled;
+            Serial.print("Bluetooth ");
+            Serial.println(bluetoothEnabled ? "Enabled" : "Disabled");
+            break;
+
+        case 1:  // Show Bluetooth Connection Details
+            Serial.println("Bluetooth Module: HC-05");
+            Serial.println("Connection Code: 1234");
+            break;
+
+        case 2:  // Back to Main Menu
+            inBluetoothMenu = false;
+            menuChanged = true;
+            break;
+    }
+}
+
+void executeWiFiAction(int option) {
+    switch (option) {
+        case 0:  // Enter SSID
+            Serial.println("Entering SSID...");
+            wifiSSID = "MyNetwork";  // Placeholder - Replace with input method
+            break;
+
+        case 1:  // Enter Password
+            Serial.println("Entering WiFi Password...");
+            wifiPassword = "MyPassword";  // Placeholder - Replace with input method
+            break;
+
+        case 2:  // Connect to WiFi
+            Serial.print("Connecting to SSID: ");
+            Serial.print(wifiSSID);
+            Serial.print(" with password: ");
+            Serial.println(wifiPassword);
+            wifiConnected = true; // Placeholder - Replace with actual connection logic
+            break;
+
+        case 3:  // Back to Main Menu
+            inWiFiMenu = false;
+            menuChanged = true;
+            break;
+    }
+}
+void executeShowAction(int option) {
+    switch (option) {
+        case 0:
+            Serial.println("Loading Show 1...");
+            break;
+        case 1:
+            Serial.println("Loading Show 2...");
+            break;
+        case 2:
+            Serial.println("Loading Show 3...");
+            break;
+        case 3:  // Back to Main Menu
+            inShowMenu = false;
+            menuChanged = true;
+            break;
+    }
+}
+
+
 
 
 
 
 void setup() {
-  Serial.begin(115200);
-  Wire.begin();
-  Serial.println("I2C Initialized.");
 
-  // Initialize SX1509
-  if (!sx1509.begin(SX1509_ADDRESS)) {
-    Serial.println("SX1509 not found! Check wiring.");
-    while (1)
-      ;
-  }
 
-  sx1509.pinMode(ENCODER_CLK, INPUT_PULLUP);
-  sx1509.pinMode(ENCODER_DT, INPUT_PULLUP);
-  sx1509.pinMode(ENCODER_SW, INPUT_PULLUP);
-  lastEncoderState = sx1509.digitalRead(ENCODER_CLK);
-  sx1509.debounceTime(10);
-  sx1509.enableInterrupt(ENCODER_CLK, CHANGE);
-  sx1509.enableInterrupt(ENCODER_SW, FALLING);
+  Serial.begin(115200);                     // Debugging output to Serial Monitor
+  Serial2.begin(9600, SERIAL_8N1, 27, 26);  // ESP32 TX (26) → Mega RX1 (19), ESP32 RX (27) ← Mega TX1 (18)
+
+
+  // Initialize Rotary Encoder Pins
+  pinMode(ENCODER_CLK, INPUT_PULLUP);
+  pinMode(ENCODER_DT, INPUT_PULLUP);
+  pinMode(ENCODER_SW, INPUT_PULLUP);
 
   // Initialize TFT
   tft.initR(INITR_BLACKTAB);
@@ -128,244 +337,78 @@ void setup() {
   pinMode(TFT_BL, OUTPUT);
   analogWrite(TFT_BL, tftBrightness);
   showLoadingScreen();
-  // Initialize SD Card
-  Serial.println("Initializing SD card...");
-  if (!SD.begin(SD_CS)) {
-    Serial.println("❌ SD Card initialization failed! Check wiring.");
-  } else {
-    Serial.println("✅ SD Card ready.");
-  }
-
   Serial.println("Drawing Menu...");
-
-  drawMenu();
+  displayMenu();
 }
+
+
+
+int lastCLK = digitalRead(ENCODER_CLK);  // Track last encoder state
 
 void loop() {
-  checkEncoder();
-  checkButton();
+    int currentCLK = digitalRead(ENCODER_CLK);
+    int dtState = digitalRead(ENCODER_DT);
+
+    // Detect Rotation
+    if (currentCLK != lastCLK) {  
+        if (dtState != currentCLK) {  // Clockwise Rotation
+            Serial.println("Rotated CLOCKWISE");
+            if (inWiFiMenu) {
+                selectedWiFi = (selectedWiFi + 1) % wifiMenuLength;
+            } else if (inShowMenu) {
+                if (inShowMenu) {
+    selectedShow = (selectedShow - 1 + showListLength) % showListLength;
 }
 
-
-void drawMenu() {
-  tft.fillScreen(ST77XX_BLACK);
-
-  // Title Bar
-  tft.fillRect(0, 0, tft.width(), 15, ST77XX_BLUE);  // Solid bar at the top
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setTextSize(1);
-  int titleX = (tft.width() - (10 * 6)) / 2;  // Center "MAIN MENU"
-  tft.setCursor(titleX, 4);
-  tft.print("MAIN MENU");
-
-  // Thin Divider Line
-  tft.drawFastHLine(0, 16, tft.width(), ST77XX_WHITE);
-
-  // Adjust menu items to avoid title overlap
-  int startY = 20;
-
-  if (isShowMenuActive) {
-    for (int i = 0; i < fileCount; i++) {
-      tft.setCursor(10, startY + i * 10);
-      if (i == subMenuIndex) {
-        tft.setTextColor(ST77XX_YELLOW);
-        tft.print("> ");
-      } else {
-        tft.setTextColor(ST77XX_WHITE);
-        tft.print("  ");
-      }
-      tft.println(fileList[i]);
-    }
-    tft.setCursor(10, startY + fileCount * 10);
-    tft.println("Back");
-  } else if (isFileOpened) {
-    // Display file content
-  } else if (isDeleteConfirm) {
-    tft.setCursor(10, startY + 10);
-    tft.setTextColor(ST77XX_RED);
-    tft.print("Delete: ");
-    tft.print(fileList[subMenuIndex]);
-    tft.setCursor(10, startY + 30);
-    tft.setTextColor(ST77XX_WHITE);
-    tft.println("Press again to confirm.");
-  } else {
-    for (int i = 0; i < mainMenuSize; i++) {
-      tft.setCursor(10, startY + i * 10);
-      if (i == selectedItem) {
-        tft.setTextColor(ST77XX_YELLOW);
-        tft.print("> ");
-      } else {
-        tft.setTextColor(ST77XX_WHITE);
-        tft.print("  ");
-      }
-      tft.println(mainMenuItems[i]);
-    }
-  }
-}
-
-
-
-
-// Bluetooth Submenu Navigation
-bool isBluetoothMenuActive = false;
-int bluetoothMenuIndex = 0;
-void drawBluetoothMenu() {
-    tft.fillScreen(ST77XX_BLACK);
-    tft.setCursor(10, 10);
-    tft.setTextColor(ST77XX_WHITE);
-    tft.setTextSize(1);
-    tft.println("BLUETOOTH MENU");
-    tft.drawFastHLine(0, 16, tft.width(), ST77XX_WHITE);
-
-    for (int i = 0; i < bluetoothMenuSize; i++) {
-        tft.setCursor(10, 30 + i * 10);
-        if (i == bluetoothMenuIndex) {
-            tft.setTextColor(ST77XX_YELLOW);
-            tft.print("> ");
-        } else {
-            tft.setTextColor(ST77XX_WHITE);
-            tft.print("  ");
-        }
-        tft.println(bluetoothMenu[i]);
-    }
-}
-void handleBluetoothMenu() {
-    if (sx1509.digitalRead(ENCODER_SW) == LOW) {
-        delay(200);
-
-        switch (bluetoothMenuIndex) {
-            case 0: // Enable Bluetooth
-                bluetoothEnabled = true;
-                SerialBT.begin("ESP32_BT");
-                Serial.println("✅ Bluetooth Enabled");
-                break;
-            case 1: // Disable Bluetooth
-                bluetoothEnabled = false;
-                SerialBT.end();
-                Serial.println("❌ Bluetooth Disabled");
-                break;
-            case 2: // Show Status
-                Serial.print("Bluetooth Status: ");
-                Serial.println(bluetoothEnabled ? "ON" : "OFF");
-                break;
-            case 3: // Back
-                isBluetoothMenuActive = false;
-                drawMenu(); // Ensure the menu redraws properly
-                return;
-        }
-        drawBluetoothMenu();
-    }
-}
-void checkEncoder() {
-    int clkState = sx1509.digitalRead(ENCODER_CLK);
-    int dtState = sx1509.digitalRead(ENCODER_DT);
-
-    if (clkState != lastEncoderState) {
-        if (isBluetoothMenuActive) {
-            if (dtState != clkState) {
-                bluetoothMenuIndex = (bluetoothMenuIndex + 1) % bluetoothMenuSize;
+            } else if (inBluetoothMenu) {
+                selectedBluetooth = (selectedBluetooth + 1) % bluetoothLength;
+            } else if (inSubMenu) {
+                selectedSetting = (selectedSetting + 1) % settingsLength;
             } else {
-                bluetoothMenuIndex = (bluetoothMenuIndex - 1 + bluetoothMenuSize) % bluetoothMenuSize;
+                selectedMenu = (selectedMenu + 1) % menuLength;
             }
-            drawBluetoothMenu();
-        } else {
-            if (dtState != clkState) {
-                selectedItem = (selectedItem + 1) % mainMenuSize;
+        } else {  // Counterclockwise Rotation
+            Serial.println("Rotated COUNTERCLOCKWISE");
+            if (inWiFiMenu) {
+                selectedWiFi = (selectedWiFi - 1 + wifiMenuLength) % wifiMenuLength;
+            } else if (inShowMenu) {
+                selectedShow = (selectedShow - 1 + showListLength) % showListLength;
+            } else if (inBluetoothMenu) {
+                selectedBluetooth = (selectedBluetooth - 1 + bluetoothLength) % bluetoothLength;
+            } else if (inSubMenu) {
+                selectedSetting = (selectedSetting - 1 + settingsLength) % settingsLength;
             } else {
-                selectedItem = (selectedItem - 1 + mainMenuSize) % mainMenuSize;
+                selectedMenu = (selectedMenu - 1 + menuLength) % menuLength;
             }
-            drawMenu();
         }
+        menuChanged = true;
     }
-    lastEncoderState = clkState;
-}
-void checkButton() {
-    if (sx1509.digitalRead(ENCODER_SW) == LOW) {
-        delay(200);
 
-        if (isBluetoothMenuActive) {
-            handleBluetoothMenu();
+    lastCLK = currentCLK;  // Update last encoder state
+
+    // Check button press (Encoder Click)
+    if (digitalRead(ENCODER_SW) == LOW) {
+        Serial.println("Encoder Button Pressed!");
+        delay(300);  // Simple debounce
+
+        if (inWiFiMenu) {
+            executeWiFiAction(selectedWiFi);
+        } else if (inShowMenu) {
+            executeShowAction(selectedShow);
+        } else if (inBluetoothMenu) {
+            executeBluetoothAction(selectedBluetooth);
+        } else if (inSubMenu) {
+            executeSettingsAction(selectedSetting);
         } else {
-            switch (selectedItem) {
-                case 0: // Bluetooth Menu
-                    isBluetoothMenuActive = true;
-                    bluetoothMenuIndex = 0; // Reset index when entering
-                    drawBluetoothMenu();
-                    break;
-                case 1: // Show Menu
-                    readSDCardFiles();
-                    isShowMenuActive = true;
-                    break;
-                case 2: // WiFi Menu
-                    Serial.println("⚙️ Enter WiFi Menu");
-                    break;
-                case 3: // Settings Menu
-                    Serial.println("⚙️ Enter Settings Menu");
-                    break;
-                case 4: // Diagnostics
-                    Serial.println("🔍 Running Diagnostics...");
-                    break;
-            }
-            drawMenu();
+            executeMenuAction(selectedMenu);
         }
     }
-}
 
-
-int scrollOffset = 0;
-const int maxVisibleItems = 5;
-void drawShowMenu() {
-  tft.fillScreen(ST77XX_BLACK);
-  for (int i = 0; i < maxVisibleItems; i++) {
-    int index = i + scrollOffset;
-    if (index >= fileCount) break;
-
-    tft.setCursor(10, 10 + i * 15);
-    tft.setTextColor(index == subMenuIndex ? ST77XX_YELLOW : ST77XX_WHITE);
-    tft.print(index == subMenuIndex ? "> " : "  ");
-    tft.println(fileList[index]);
-  }
-}
-void readSDCardFiles() {
-  File root = SD.open("/");
-  fileCount = 0;
-
-  while (true) {
-    File entry = root.openNextFile();
-    if (!entry || fileCount >= 10) break;
-    if (!entry.isDirectory()) {
-      strncpy(fileList[fileCount], entry.name(), sizeof(fileList[fileCount]) - 1);
-      fileList[fileCount][sizeof(fileList[fileCount]) - 1] = '\0';
-      fileCount++;
+    // Update menu display when selection changes
+    if (menuChanged) {
+        displayMenu();
+        menuChanged = false;
     }
-    entry.close();
-  }
-
-  root.close();
-  Serial.println("SD Card Files Loaded.");
 }
-void openFile(const char* filename) {
-  File file = SD.open(filename);
-  if (!file) {
-    Serial.println("Failed to open file.");
-    return;
-  }
 
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setCursor(10, 10);
-  tft.setTextColor(ST77XX_WHITE);
-  while (file.available()) {
-    tft.println(file.readStringUntil('\n'));
-    delay(500);
-  }
-  file.close();
 
-  isFileOpened = true;
-}
-void deleteFile(const char* filename) {
-  if (SD.remove(filename)) {
-    Serial.println("File deleted.");
-  } else {
-    Serial.println("Failed to delete file.");
-  }
-}
