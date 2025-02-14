@@ -1,6 +1,13 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
+#include <LiquidCrystal_I2C.h>
+#include <Adafruit_NeoPixel.h>
+
+// Which pin on the Arduino is connected to the time circuits?
+#define indicators 25// How many Neomachine are attached to the Arduino?
+#define indicate 30  // Popular NeoPixel ring size
+Adafruit_NeoPixel display(indicate, indicators, NEO_GRB + NEO_KHZ800);
 
 
 // TFT Display Pins
@@ -9,6 +16,9 @@
 #define TFT_DC 2
 #define TFT_BL 32
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+
+// Set the LCD address to 0x27 or 0x3F depending on your module
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // Rotary Encoder Pins (Now directly on ESP32)
 #define ENCODER_CLK 34
@@ -158,7 +168,6 @@ void displayMenu() {
     }
 }
 
-
 void executeMenuAction(int option) {
     switch (option) {
         case 0:  // Open Bluetooth Menu
@@ -193,7 +202,6 @@ void executeMenuAction(int option) {
     }
 }
 
-
 void executeSettingsAction(int option) {
   Serial2.println("BUZZ");  // Send buzz command to Mega
   switch (option) {
@@ -206,9 +214,17 @@ void executeSettingsAction(int option) {
       break;
   }
 }
-
 void toggleBluetooth() {
-  Serial.println("Toggling Bluetooth...");
+    bluetoothEnabled = !bluetoothEnabled;
+    tft.fillScreen(ST77XX_BLACK);
+    tft.setCursor(10, 10);
+    tft.setTextColor(ST77XX_WHITE);
+    tft.setTextSize(1);
+    tft.print("Bluetooth: ");
+    tft.setTextColor(bluetoothEnabled ? ST77XX_GREEN : ST77XX_RED);
+    tft.println(bluetoothEnabled ? "ENABLED" : "DISABLED");
+    delay(1000);  // Hold the message for 1 second
+    displayMenu();  // Redraw menu
 }
 
 void showMenu() {
@@ -238,48 +254,67 @@ void runDiagnostics() {
 }
 
 
-void showLoadingScreen() {
-  tft.fillScreen(ST77XX_BLACK);
-
-  // Centered Title
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setTextSize(2);
-  int titleX = (tft.width() - (9 * 12)) / 2;  // Approx. width of "SHOWDUINO"
-  tft.setCursor(titleX, 50);
-  tft.print("SHOWDUINO");
-
-  // System Version
-  tft.setTextSize(1);
-  int versionX = (tft.width() - (10 * 6)) / 2;  // Approx. width of "SYSTEM v1.0"
-  tft.setCursor(versionX, 80);
-  tft.print("SYSTEM v1.0");
-
-  // Loading Text
-  tft.setCursor((tft.width() - (7 * 6)) / 2, 120);  // "LOADING" centered
-  tft.print("LOADING");
-
-  // Animated Dots + Progress Bar
-  for (int i = 0; i < 4; i++) {
-    tft.setCursor((tft.width() / 2) + (i * 6), 120);
-    tft.print(".");
-    delay(500);
-  }
-
-  // Progress Bar
-  int barX = 30;
-  int barY = 150;
-  int barWidth = tft.width() - 60;
-  int barHeight = 8;
-
-  tft.drawRect(barX, barY, barWidth, barHeight, ST77XX_WHITE);  // Outline
-
-  for (int i = 0; i <= barWidth - 2; i += 6) {
-    tft.fillRect(barX + 1, barY + 1, i, barHeight - 2, ST77XX_GREEN);
-    delay(50);
-  }
-
-  delay(1000);  // Hold before entering menu
+// Function to display loading screens on both LCD and TFT
+void showLoadingScreens() {
+    lcd.clear(); // Clear LCD screen
+    tft.fillScreen(ST77XX_BLACK); // Clear TFT screen
+    
+    // Display centered title
+    lcd.setCursor(2, 0);
+    lcd.print("SHOWDUINO"); // Print title on LCD
+    
+    tft.setTextColor(ST77XX_WHITE);
+    tft.setTextSize(2);
+    int titleX = (tft.width() - (9 * 12)) / 2; // Calculate center position
+    tft.setCursor(titleX, 50);
+    tft.print("SHOWDUINO"); // Print title on TFT
+    
+    // Display system version
+    lcd.setCursor(2, 1);
+    lcd.print("SYSTEM v1.0"); // Print version on LCD
+    
+    tft.setTextSize(1);
+    int versionX = (tft.width() - (10 * 6)) / 2; // Center version text
+    tft.setCursor(versionX, 80);
+    tft.print("SYSTEM v1.0"); // Print version on TFT
+    delay(1000);
+    
+    // Loading animation
+    lcd.clear();
+    lcd.setCursor(3, 0);
+    lcd.print("LOADING"); // Print loading text on LCD
+    tft.setCursor((tft.width() - (7 * 6)) / 2, 120);
+    tft.print("LOADING"); // Print loading text on TFT
+    
+    // Dots animation
+    for (int i = 0; i < 4; i++) {
+        lcd.setCursor(10 + i, 0);
+        lcd.print("."); // Append dots on LCD
+        tft.setCursor((tft.width() / 2) + (i * 6), 120);
+        tft.print("."); // Append dots on TFT
+        delay(500);
+    }
+    
+    // Display progress percentage
+    int barX = 30;
+    int barY = 150;
+    int barWidth = tft.width() - 60;
+    int barHeight = 8;
+    tft.drawRect(barX, barY, barWidth, barHeight, ST77XX_WHITE); // Draw progress bar outline
+    
+    for (int i = 0; i <= 10; i++) {
+        lcd.setCursor(5, 1);
+        lcd.print(i * 10); // Print progress percentage on LCD
+        lcd.print("%");
+        
+        tft.fillRect(barX + 1, barY + 1, i * (barWidth / 10), barHeight - 2, ST77XX_GREEN); // Fill progress bar on TFT
+        delay(300);
+    }
+    delay(1000);
+    lcd.clear(); // Clear LCD after loading
 }
+
+
 
 void executeBluetoothAction(int option) {
     switch (option) {
@@ -480,7 +515,10 @@ void setup() {
 
   Serial.begin(115200);                     // Debugging output to Serial Monitor
   Serial2.begin(9600, SERIAL_8N1, 27, 26);  // ESP32 TX (26) → Mega RX1 (19), ESP32 RX (27) ← Mega TX1 (18)
-
+    display.begin();
+     display.setPixelColor(0, 0, 255, 0);  // Change color to green
+    display.setPixelColor(1, 255, 0, 0);  // Pixel update
+    display.show();
 
   // Initialize Rotary Encoder Pins
   pinMode(ENCODER_CLK, INPUT_PULLUP);
@@ -492,22 +530,34 @@ void setup() {
   tft.setRotation(4);
   tft.setTextSize(1);
   tft.fillScreen(ST77XX_BLACK);
+
   pinMode(TFT_BL, OUTPUT);
+
   analogWrite(TFT_BL, tftBrightness);
-  showLoadingScreen();
+
+    lcd.init();  // Initialize the LCD
+    lcd.backlight();  // Turn on the backlight
+
+  showLoadingScreens();
+
   Serial.println("Drawing Menu...");
   displayMenu();
+    // Display system status on LCD
+    lcd.setCursor(0, 0);
+    lcd.print("System Ready");
+    lcd.setCursor(0, 1);
+    lcd.print("Awaiting Input");
 }
 
 
 
-int lastCLK = digitalRead(ENCODER_CLK);  // Track last encoder state
+int lastCLK = HIGH;  // Track last known state of CLK
 void loop() {
-    int currentCLK = digitalRead(ENCODER_CLK);
-    int dtState = digitalRead(ENCODER_DT);
+    int currentCLK = digitalRead(ENCODER_CLK);  // Read current state
+    int dtState = digitalRead(ENCODER_DT);      // Read DT pin
 
-    // Detect Rotation
-    if (currentCLK != lastCLK) {  
+    // Detect only when the CLK pin goes **LOW** (falling edge)
+    if (currentCLK == LOW && lastCLK == HIGH) {  
         if (dtState != currentCLK) {  // Clockwise Rotation
             Serial.println("Rotated CLOCKWISE");
             if (inDiagnosticsMenu) {
@@ -521,7 +571,6 @@ void loop() {
             } else if (inSubMenu) {
                 selectedSetting = (selectedSetting + 1) % settingsLength;
             } else if (inSelfTest) {
-                // Prevent rotation from affecting self-test steps
                 Serial.println("Self-Test in Progress - Rotation Ignored");
             } else {
                 selectedMenu = (selectedMenu + 1) % menuLength;
@@ -539,7 +588,6 @@ void loop() {
             } else if (inSubMenu) {
                 selectedSetting = (selectedSetting - 1 + settingsLength) % settingsLength;
             } else if (inSelfTest) {
-                // Prevent rotation from affecting self-test steps
                 Serial.println("Self-Test in Progress - Rotation Ignored");
             } else {
                 selectedMenu = (selectedMenu - 1 + menuLength) % menuLength;
@@ -548,7 +596,7 @@ void loop() {
         menuChanged = true;
     }
 
-    lastCLK = currentCLK;  // Update last encoder state
+    lastCLK = currentCLK;  // Store last state for next loop
 
  // 🚀 Handle Self-Test Step Progression 🚀
     if (inSelfTest && digitalRead(ENCODER_SW) == LOW) {
